@@ -1,6 +1,4 @@
-#include "stdio.h"
-#include "sys/time.h"
-#include "inslib.h"
+//include "inslib.h"
 int M = 100;
 int N = 100;
 void test(){
@@ -14,8 +12,6 @@ void test(){
 }
 int main()
 {
-  //insert_begin();
-  test(); 
-  //insert_end("main",b);
+  test();
   return 0;
 }
