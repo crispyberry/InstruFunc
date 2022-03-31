@@ -75,9 +75,9 @@ struct InstruFuncPass : public FunctionPass
           
         //  函数结尾的BasicBlock
         BasicBlock &BB = *I;
-        for (BasicBlock::iterator I = BB.begin(), E = BB.end(); I != E; ++I)
+        for (BasicBlock::iterator I1 = BB.begin(), E1 = BB.end(); I1 != E1; ++I1)
         {
-          ReturnInst *IST = dyn_cast<ReturnInst>(I);
+          ReturnInst *IST = dyn_cast<ReturnInst>(I1);
           if (!IST)
             continue;
           
