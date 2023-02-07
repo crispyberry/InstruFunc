@@ -1,6 +1,6 @@
-#include <unordered_map>
 #include <stdio.h>
-extern std::unordered_map<char*, int> BasicBlockRes;
-void insert_counter(char* bb);
-void insert_out();
+#include <unordered_map>
+extern "C" std::unordered_map<char*, int> BasicBlockRes;
+extern "C" void insert_counter(char* bb);
+extern "C" void insert_out();
 
