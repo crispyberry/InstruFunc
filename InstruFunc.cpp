@@ -24,26 +24,26 @@ struct InstruFuncPass : public FunctionPass
     if (F.getName().startswith("insert_"))
         return false;
 
-      // 2. 记录开始时间
+      // Record beginTime
       Value* beginTime = nullptr;
       if (!insert_begin_inst(F, beginTime))
         return false;
       
-      // 3. 方法结束时统计方法耗时，开始的时间记录作为参数
+      // When the method ends, the statistical method takes time, and the starting time is recorded as a parameter
       insert_return_inst(F, beginTime);
       return false;
   }
 
   bool insert_begin_inst(Function &F, Value*& beginTime)
     {
-      // 0.函数最开始的BasicBlock
+      // 0.The BasicBlock at the beginning of the function
       LLVMContext &context = F.getParent()->getContext();
       BasicBlock &bb = F.getEntryBlock();
       
-      // 1. 获取要插入的函数
+      // 1.Get the function to insert
       FunctionCallee beginFun = F.getParent()->getOrInsertFunction("insert_begin",FunctionType::get(Type::getInt64Ty(context), {}, false));
 
-      // 2. 构造函数
+      // 2.construct this function
       // Value *beginTime = nullptr;
       CallInst *inst = nullptr;
       IRBuilder<> builder(context);
@@ -55,13 +55,13 @@ struct InstruFuncPass : public FunctionPass
         return false;
       }
 
-      // 3. 获取函数开始的第一条指令
+      // 3.Get the first instruction at the beginning of the function
       Instruction *beginInst = dyn_cast<Instruction>(bb.begin());
 
-      // 4. 将inst插入
+      // 4. inset inst
       inst->insertBefore(beginInst);
       
-      // 5.根据返回值记录开始时间
+      // 5.Record the start time according to the return value
       beginTime = inst;
 
       return true;
@@ -73,15 +73,13 @@ struct InstruFuncPass : public FunctionPass
       for (Function::iterator I = F.begin(), E = F.end(); I != E; ++I)
       {
           
-        //  函数结尾的BasicBlock
         BasicBlock &BB = *I;
         for (BasicBlock::iterator I1 = BB.begin(), E1 = BB.end(); I1 != E1; ++I1)
         {
           ReturnInst *IST = dyn_cast<ReturnInst>(I1);
           if (!IST)
             continue;
-          
-          // end_func 类型
+
           FunctionType *endFuncType = FunctionType::get(
             Type::getVoidTy(context),
             {Type::getInt8PtrTy(context),Type::getInt64Ty(context)},
@@ -91,7 +89,6 @@ struct InstruFuncPass : public FunctionPass
           // end_func
           FunctionCallee endFunc = BB.getModule()->getOrInsertFunction("insert_end", endFuncType);
 
-          // 构造end_func
           IRBuilder<> builder(&BB);
           IRBuilder<> callBuilder(context);
           CallInst* endCI = callBuilder.CreateCall(endFunc,
@@ -101,7 +98,6 @@ struct InstruFuncPass : public FunctionPass
             }
           );
 
-          // 插入end_func(struction)
           endCI->insertBefore(IST);
         }
       }
