@@ -21,7 +21,7 @@ struct InstruFuncPass : public FunctionPass{
   static char ID;
   InstruFuncPass() : FunctionPass(ID){}
   bool runOnFunction(Function &F) override{
-    if (F.getName().startswith("insert_mem"))
+    if (F.getName().startswith("insert_"))
         return false;
 
     if (!insert_begin_inst(F))
@@ -32,17 +32,38 @@ struct InstruFuncPass : public FunctionPass{
 
   bool insert_begin_inst(Function &F){
     LLVMContext &context = F.getParent()->getContext();
-    FunctionCallee beginFun = F.getParent()->getOrInsertFunction("insert_mem", FunctionType::get(Type::getVoidTy(context), {}, false));
- 
+    
     for(Function::iterator BB = F.begin(), End = F.end(); BB != End; ++BB){
-      //errs()<<BB->getName()<<" "<<BB->getTerminator()->getNumSuccessors()<<"\n";
       Instruction *beginInst = dyn_cast<Instruction>(BB->begin());
-      //beginInst->dump();
-      //errs()<<"\n";
+      if(F.getName() == "main"){
+        BasicBlock *BBInMain = &*BB;
+        for (BasicBlock::iterator Ins = BBInMain->begin(), EndIns = BBInMain->end(); Ins != EndIns; ++Ins){
+          ReturnInst *endInst = dyn_cast<ReturnInst>(Ins);
+          if (!endInst)
+            continue;
+          FunctionCallee endFun = F.getParent()->getOrInsertFunction("insert_out", FunctionType::get(Type::getVoidTy(context), {}, false));
+          CallInst *collect = nullptr;
+          IRBuilder<> callBuilder(context);
+          collect = callBuilder.CreateCall(endFun);
+          if (!collect) {
+            llvm::errs() << "Create Collect CallInst Failed\n";
+            return false;
+        }
+          collect->insertBefore(endInst);
+          break;
+        }
+      }
+      FunctionCallee beginFun = F.getParent()->getOrInsertFunction("insert_counter", FunctionType::get(
+          Type::getVoidTy(context),Type::getInt8PtrTy(context), false
+          ));
       CallInst *probe = nullptr;
-      //IRBuilder<> builder(BB);
       IRBuilder<> callBuilder(context);
-      probe = callBuilder.CreateCall(beginFun);
+      BasicBlock * BBForBuilder = &*BB;
+      IRBuilder<> builder(BBForBuilder);
+      probe = callBuilder.CreateCall(beginFun, {
+              builder.CreateGlobalStringPtr(BB->getName()),
+            });
+      //auto probe = CallInst::Create()
       if (!probe) {
         llvm::errs() << "Create First CallInst Failed\n";
         return false;
