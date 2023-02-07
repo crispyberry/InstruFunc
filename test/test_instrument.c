@@ -1,17 +1,16 @@
-//include "inslib.h"
-int M = 100;
-int N = 100;
-void test(){
-  int x = 2;
-  int A[M*N];
-  for (int i = 0;i < N;i++){
-    for(int j = 0;j < M;j++){
-      A[i*M+j]+=x;
+#include <limits.h>
+#include "inslib.h"
+int toy(int a, int b) {
+    for(int i = 0; i < __INT32_MAX__; i++){
+        if(i < 200){
+            a+=i;
+        }
+        b+=i;
     }
-  } 
+    return a + b;
 }
-int main()
-{
-  test();
-  return 0;
+
+int main(){
+    int x = toy(200, 500);
+    return 0;
 }
