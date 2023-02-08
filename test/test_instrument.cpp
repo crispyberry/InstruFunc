@@ -1,7 +1,7 @@
-#include <limits.h>
+#define Times1 2147483647
 #include "inslib.h"
 int toy(int a, int b) {
-    for(int i = 0; i < __INT32_MAX__; i++){
+    for(int i = 0; i < Times1; i++){
         if(i < 200){
             a+=i;
         }
