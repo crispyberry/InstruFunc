@@ -68,7 +68,7 @@ struct InstruFuncPass : public FunctionPass{
         llvm::errs() << "Create First CallInst Failed\n";
         return false;
       }
-      probe->insertAfter(beginInst);
+      probe->insertBefore(beginInst);
     }
 
     return true;
