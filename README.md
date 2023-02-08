@@ -11,7 +11,7 @@ Take inserting a timing function as an example:
 In the **libins** fold, we can compile the inserted timing function into a dynamic library:
 
 ```bash
-gcc inslib.c -I . -shared -fPIC -o libinstrument.so
+g++ inslib.cpp -I . -shared -fPIC -o libinstrument.so
 ```
 
 ## Build the new pass
@@ -54,20 +54,9 @@ int main()
 In the **test** fold:
 
 ```bash
-clang -S -L ../libins/ -linstrument -emit-llvm -I ../libins test_instrument.c -o test_instrument.ll
-opt -load ../InstruFunc.so -instrufunc -enable-new-pm=0 test_instrument.ll -o test_instrument.bc
-lli -load ../libins/libinstrument.so test_instrument.bc
+clang++ -c -emit-llvm -I ../libins test_instrument.cpp -o test_instrument.bc
+opt -load ../InstruFunc.so -instrufunc -enable-new-pm=0 test_instrument.bc -o test_instrument.hack.bc
+clang++ -L../libins -linstrument test_instrument.hack.bc -o test_instrument.exe
+LD_LIBRARY_PATH=../libins ./test_instrument.exe
 ```
 
-### Method2: Using Clang -Xclang (Need to be fixed)
-
-In the **test** fold:
-
-```bash
-clang -Xclang  -load -Xclang ../InstruFunc.so -L ../libins -linstrument -I ../libins test_instrument.c -o test_instrument
-```
-
-```bash
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(topdir)/InstruFunc/libins
-./test_instrument
-```
