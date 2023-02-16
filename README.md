@@ -2,7 +2,7 @@
 
 ## ****Prerequisites****
 
-After compiling and installing LLVM 13, the environment needs to have LLVM-related paths.
+After compiling and installing LLVM 16, the environment needs to have LLVM-related paths.
 
 ## The inserted code needs to be compiled as a library
 
