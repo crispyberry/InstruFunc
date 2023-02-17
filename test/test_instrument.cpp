@@ -1,9 +1,8 @@
 #include "inslib.h"
-#define Times1 2147483647
-#define Times2 214748364
+#define Times 214748364
 int toy(int a, int b) {
-    for(int i = 0; i < Times2; i++){
-        if(i < 200){
+    for(int i = 0; i < Times; i++){
+        if(i < Times - 200){
             a+=i;
         }
         b+=i;
