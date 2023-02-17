@@ -27,6 +27,36 @@ struct InstruFuncPass : public FunctionPass{
     if (!insert_begin_inst(F))
       return false;
 
+    if (!insert_main_out(F))
+      return false;
+
+    return false;
+  }
+
+  bool insert_main_out(Function &F){
+    if(F.getName() == "main"){
+
+      LLVMContext &context = F.getParent()->getContext();
+
+      //BasicBlock *lastBB = &*(std::find_if(F.begin(), F.end(), [](BasicBlock &BB) { return succ_begin(&BB) == succ_end(&BB); }));
+      BasicBlock *lastBB = &*(--F.end());
+
+      for (BasicBlock::iterator Ins = lastBB->begin(), EndIns = lastBB->end(); Ins != EndIns; ++Ins){
+        ReturnInst *endInst = dyn_cast<ReturnInst>(Ins);
+        if (!endInst)
+          continue;
+        FunctionCallee endFun = F.getParent()->getOrInsertFunction("insert_out", FunctionType::get(Type::getVoidTy(context), {}, false));
+        CallInst *collect = nullptr;
+        IRBuilder<> callBuilder(context);
+        collect = callBuilder.CreateCall(endFun);
+        if (!collect) {
+          llvm::errs() << "Create Collect CallInst Failed\n";
+          return false;
+        }
+        collect->insertBefore(endInst);
+        return true;
+      }
+    }
     return false;
   }
 
@@ -34,43 +64,33 @@ struct InstruFuncPass : public FunctionPass{
     LLVMContext &context = F.getParent()->getContext();
     
     for(Function::iterator BB = F.begin(), End = F.end(); BB != End; ++BB){
-      Instruction *beginInst = dyn_cast<Instruction>(BB->begin());
-      if(F.getName() == "main"){
-        BasicBlock *BBInMain = &*BB;
-        for (BasicBlock::iterator Ins = BBInMain->begin(), EndIns = BBInMain->end(); Ins != EndIns; ++Ins){
-          ReturnInst *endInst = dyn_cast<ReturnInst>(Ins);
-          if (!endInst)
-            continue;
-          FunctionCallee endFun = F.getParent()->getOrInsertFunction("insert_out", FunctionType::get(Type::getVoidTy(context), {}, false));
-          CallInst *collect = nullptr;
-          IRBuilder<> callBuilder(context);
-          collect = callBuilder.CreateCall(endFun);
-          if (!collect) {
-            llvm::errs() << "Create Collect CallInst Failed\n";
-            return false;
-        }
-          collect->insertBefore(endInst);
-          break;
-        }
-      }
-      FunctionCallee beginFun = F.getParent()->getOrInsertFunction("insert_counter", FunctionType::get(
+    
+    auto firstNonPhiInst = std::find_if(BB->begin(), BB->end(),
+    [](Instruction &I) { return !isa<PHINode>(&I); });
+
+      if (firstNonPhiInst != BB->end()) {
+        Instruction *insertPoint = &*firstNonPhiInst;
+        FunctionCallee beginFun = F.getParent()->getOrInsertFunction("insert_counter", FunctionType::get(
           Type::getVoidTy(context),Type::getInt8PtrTy(context), false
           ));
-      CallInst *probe = nullptr;
-      IRBuilder<> callBuilder(context);
-      BasicBlock * BBForBuilder = &*BB;
-      IRBuilder<> builder(BBForBuilder);
-      probe = callBuilder.CreateCall(beginFun, {
+        CallInst *probe = nullptr;
+        IRBuilder<> callBuilder(context);
+        BasicBlock * BBForBuilder = &*BB;
+        IRBuilder<> builder(BBForBuilder);
+        probe = callBuilder.CreateCall(beginFun, {
               builder.CreateGlobalStringPtr(BB->getName()),
             });
-      //auto probe = CallInst::Create()
-      if (!probe) {
-        llvm::errs() << "Create First CallInst Failed\n";
-        return false;
-      }
-      probe->insertBefore(beginInst);
-    }
 
+        if (!probe) {
+          llvm::errs() << "Create First CallInst Failed\n";
+          return false;
+        }
+        probe->insertBefore(insertPoint);
+      }
+      else {
+        continue;
+      }
+    }
     return true;
   }
 };
